@@ -7,6 +7,8 @@ import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperties;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -24,6 +26,12 @@ import java.util.Base64;
 @ApplicationScoped
 public class PrivateKeyProducer {
 
+    @ConfigProperty(name = "cert.filepath")
+    String certFilepath;
+
+    @ConfigProperty(name = "private.key.filepath")
+    String privateKeyFilepath;
+
     IExternalSignature iExternalSignature;
 
     Certificate[] certificates;
@@ -36,12 +44,12 @@ public class PrivateKeyProducer {
         Security.addProvider(provider);
 
         CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-        try (InputStream certIS = PrivateKeyProducer.class.getResourceAsStream("/my_cert.crt")) {
+        try (InputStream certIS = new FileInputStream(certFilepath)) {
             certificates = new Certificate[]{certFactory.generateCertificate(certIS)};
         }
 
         PrivateKey privateKey;
-        try (InputStream keyIS = PrivateKeyProducer.class.getResourceAsStream("/private_key_pkcs8.pem")) {
+        try (InputStream keyIS = new FileInputStream(privateKeyFilepath)) {
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];
