@@ -8,6 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +19,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
 
 @ApplicationScoped
 public class PrivateKeyProducer {
@@ -34,16 +36,31 @@ public class PrivateKeyProducer {
         Security.addProvider(provider);
 
         CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-        try (InputStream certIS = PrivateKeyProducer.class.getResourceAsStream("/example.com.crt")) {
+        try (InputStream certIS = PrivateKeyProducer.class.getResourceAsStream("/my_cert.crt")) {
             certificates = new Certificate[]{certFactory.generateCertificate(certIS)};
         }
 
         PrivateKey privateKey;
-        try (InputStream keyIS = PrivateKeyProducer.class.getResourceAsStream("/example.com.pkcs8.key")) {
+        try (InputStream keyIS = PrivateKeyProducer.class.getResourceAsStream("/private_key_pkcs8.pem")) {
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = keyIS.read(buffer)) != -1) {
+                baos.write(buffer, 0, bytesRead);
+            }
+            byte[] encodedPrivateKey = baos.toByteArray();
+
+            // The encoded private key should be in PEM format, so we need to remove the PEM header and footer
+            String privateKeyPem = new String(encodedPrivateKey);
+            privateKeyPem = privateKeyPem.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "").replaceAll("\\s", "");
+
+            // Decode the Base64 encoded private key
+            byte[] decodedPrivateKey = Base64.getDecoder().decode(privateKeyPem);
+
             // Gestione della chiave privata
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            byte[] keyBytes = keyIS.readAllBytes();
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decodedPrivateKey);
             privateKey = keyFactory.generatePrivate(keySpec);
         }
 

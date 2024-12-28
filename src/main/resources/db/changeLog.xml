@@ -12,5 +12,6 @@
         http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
 
     <include file="migration/V1.0.0__INIT.sql" relativeToChangelogFile="true"/>
+    <include file="migration/V1.0.1__COBSIGN.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

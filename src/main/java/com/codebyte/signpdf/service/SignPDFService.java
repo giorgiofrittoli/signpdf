@@ -31,9 +31,11 @@ public class SignPDFService {
     @Transactional
     public File signPDF(String token, File pdf) throws SignPDFException {
 
-        try{
+        try {
 
-            CustomerSign customerSign = CustomerSign.<CustomerSign>find("token", token).firstResultOptional().orElseThrow(NotFoundException::new);
+            CustomerSign customerSign = CustomerSign.<CustomerSign>find("token", token)
+                    .firstResultOptional()
+                    .orElseThrow(NotFoundException::new);
 
             // Leggi il PDF
             PdfReader reader = new PdfReader(pdf);
@@ -43,7 +45,10 @@ public class SignPDFService {
             signer.setFieldName("Signature1");
 
             // Crea l'apparenza della firma
-            signer.getSignatureAppearance().setReason("Test Firma").setLocation("Test Ragione").setReuseAppearance(false);
+            signer.getSignatureAppearance()
+                    .setReason("Firma")
+                    .setLocation("Test Ragione")
+                    .setReuseAppearance(false);
 
             // Provider di certificati
             IExternalDigest digest = new BouncyCastleDigest();
@@ -59,10 +64,9 @@ public class SignPDFService {
 
             return pdfSigned;
 
-        }catch (IOException | GeneralSecurityException e){
+        } catch (IOException | GeneralSecurityException e) {
             throw new SignPDFException(e);
         }
-
 
 
     }
