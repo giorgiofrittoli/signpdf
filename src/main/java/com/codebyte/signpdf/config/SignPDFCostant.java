@@ -1,4 +1,4 @@
-package com.codebyte.signpdf;
+package com.codebyte.signpdf.config;
 
 public class SignPDFCostant {
 

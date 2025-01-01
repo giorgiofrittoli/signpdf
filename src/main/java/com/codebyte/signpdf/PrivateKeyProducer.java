@@ -1,20 +1,15 @@
-package com.codebyte.signpdf.service;
+package com.codebyte.signpdf;
 
-import com.itextpdf.signatures.DigestAlgorithms;
-import com.itextpdf.signatures.IExternalSignature;
-import com.itextpdf.signatures.PrivateKeySignature;
 import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.eclipse.microprofile.config.inject.ConfigProperties;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -32,7 +27,7 @@ public class PrivateKeyProducer {
     @ConfigProperty(name = "private.key.filepath")
     String privateKeyFilepath;
 
-    IExternalSignature iExternalSignature;
+    PrivateKey privateKey;
 
     Certificate[] certificates;
 
@@ -48,7 +43,6 @@ public class PrivateKeyProducer {
             certificates = new Certificate[]{certFactory.generateCertificate(certIS)};
         }
 
-        PrivateKey privateKey;
         try (InputStream keyIS = new FileInputStream(privateKeyFilepath)) {
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -57,10 +51,9 @@ public class PrivateKeyProducer {
             while ((bytesRead = keyIS.read(buffer)) != -1) {
                 baos.write(buffer, 0, bytesRead);
             }
-            byte[] encodedPrivateKey = baos.toByteArray();
 
             // The encoded private key should be in PEM format, so we need to remove the PEM header and footer
-            String privateKeyPem = new String(encodedPrivateKey);
+            String privateKeyPem = baos.toString();
             privateKeyPem = privateKeyPem.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "").replaceAll("\\s", "");
 
             // Decode the Base64 encoded private key
@@ -71,15 +64,11 @@ public class PrivateKeyProducer {
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decodedPrivateKey);
             privateKey = keyFactory.generatePrivate(keySpec);
         }
-
-        // Crea un PrivateKeyEntry con il certificato e la chiave privata
-        KeyStore.PrivateKeyEntry pKey = new KeyStore.PrivateKeyEntry(privateKey, certificates);
-        iExternalSignature = new PrivateKeySignature(pKey.getPrivateKey(), DigestAlgorithms.SHA256, BouncyCastleProvider.PROVIDER_NAME);
     }
 
     @Produces
-    public IExternalSignature getSignature() {
-        return iExternalSignature;
+    public PrivateKey getPrivateKey() {
+        return privateKey;
     }
 
     @Produces

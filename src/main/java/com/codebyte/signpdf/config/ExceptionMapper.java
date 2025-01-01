@@ -1,4 +1,4 @@
-package com.codebyte.signpdf;
+package com.codebyte.signpdf.config;
 
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
