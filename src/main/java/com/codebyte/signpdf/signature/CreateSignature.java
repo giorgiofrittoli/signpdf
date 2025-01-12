@@ -17,12 +17,16 @@
 package com.codebyte.signpdf.signature;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.ExternalSigningSupport;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
 
 import java.io.*;
+import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.util.Calendar;
@@ -65,6 +69,41 @@ public class CreateSignature extends CreateSignatureBase {
         try (FileOutputStream fos = new FileOutputStream(outFile);
              PDDocument doc = Loader.loadPDF(inFile)) {
             signDetached(doc, fos);
+        }
+    }
+
+    public void signWTimestamp(File inFile, File outFile, String tsaUrl) throws IOException, NoSuchAlgorithmException {
+        if (inFile == null || !inFile.exists()) {
+            throw new FileNotFoundException("Document for signing does not exist");
+        }
+
+        setTsaUrl(tsaUrl);
+
+        // sign
+        try (FileOutputStream fos = new FileOutputStream(outFile);
+             PDDocument doc = Loader.loadPDF(inFile)) {
+
+            // call SigUtils.checkCrossReferenceTable(document) if Adobe complains
+            // and read https://stackoverflow.com/a/71293901/535646
+            // and https://issues.apache.org/jira/browse/PDFBOX-5382
+
+            int accessPermissions = SigUtils.getMDPPermission(doc);
+            if (accessPermissions == 1) {
+                throw new IllegalStateException("No changes to the document are permitted due to DocMDP transform parameters dictionary");
+            }
+
+            // create signature dictionary
+            PDSignature signature = new PDSignature();
+            signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
+            signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
+            signature.setSubFilter(COSName.getPDFName("ETSI.RFC3161"));
+            signature.setSignDate(Calendar.getInstance());
+
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            TSAClient tsaClient = new TSAClient(new URL(this.getTsaUrl()), null, null, digest);
+
+            doc.addSignature(signature, new TimestampSignatureImpl(tsaClient));
+            doc.saveIncremental(fos);
         }
     }
 

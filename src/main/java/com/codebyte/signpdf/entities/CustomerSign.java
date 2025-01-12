@@ -2,9 +2,10 @@ package com.codebyte.signpdf.entities;
 
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "customer_sign")
@@ -15,7 +16,7 @@ public class CustomerSign extends PanacheEntity {
     @Column
     public String token;
 
-    @Column
-    public int tot;
+    @OneToMany(mappedBy = "customerSign", fetch = FetchType.LAZY)
+    public List<PDFSigned> pdfSigned = new ArrayList<>();
 
 }
