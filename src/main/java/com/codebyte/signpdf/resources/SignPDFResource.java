@@ -87,7 +87,7 @@ public class SignPDFResource {
             g.drawString("PDFId " + pdfID, 55, 40);
             g.dispose();
 
-            File logoForSign = new File("/Users/giorgio/Downloads/", UUID.randomUUID() + ".png");
+            File logoForSign = new File(FileUtils.getTempDirectory(), UUID.randomUUID() + ".png");
             ImageIO.write(image, "png", logoForSign);
 
             String md5Logo;
