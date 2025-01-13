@@ -14,7 +14,6 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -26,16 +25,13 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.jboss.resteasy.reactive.ResponseStatus;
 
-import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.time.LocalDateTime;
@@ -80,15 +76,15 @@ public class SignPDFResource {
 
             String pdfID = RandomStringUtils.random(13, true, true).toUpperCase();
 
-            BufferedImage image = new BufferedImage(250, 40, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage image = new BufferedImage(250, 33, BufferedImage.TYPE_INT_ARGB);
             Graphics g = image.getGraphics();
             g.drawImage(ImageIO.read(SignPDFResource.class.getResource("/cb.png")), 0, 0, null);
-            g.setFont(g.getFont().deriveFont(10f));
+            g.setFont(g.getFont().deriveFont(8f));
             g.setColor(Color.BLACK);
-            g.drawString("Certified Firmapdf.net", 80, 10);
-            g.drawString("Signer " + newSignRequest.getCaller(), 80, 20);
-            g.drawString("Date " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("y-M-d H:m:s")), 80, 30);
-            g.drawString("PDFId " + pdfID, 80, 40);
+            g.drawString("Certified Firmapdf.net", 55, 8);
+            g.drawString("Signer " + newSignRequest.getCaller(), 55, 16);
+            g.drawString("Date " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("y-M-d H:m:s")), 55, 24);
+            g.drawString("PDFId " + pdfID, 55, 32);
             g.dispose();
 
             File logoForSign = new File(FileUtils.getTempDirectory(), UUID.randomUUID() + ".png");
@@ -114,7 +110,7 @@ public class SignPDFResource {
                         // better method inspired by http://stackoverflow.com/a/22318681/535646
                         // reduce this value if the image is too large
                         float scale = 1f;
-                        contentStream.drawImage(pdImage, 0, 740, pdImage.getWidth() * scale, pdImage.getHeight() * scale);
+                        contentStream.drawImage(pdImage, 0, 800, pdImage.getWidth() * scale, pdImage.getHeight() * scale);
                     }
                 }
 
