@@ -123,8 +123,7 @@ public class CreateSignature extends CreateSignatureBase {
         PDSignature signature = new PDSignature();
         signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
         signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
-        signature.setName("Codebyte SRL");
-        signature.setLocation("Lodi, Italy");
+        signature.setName("IN LAB Srl");
         signature.setReason("Firma PDF");
 
         // the signing date, needed for valid signature

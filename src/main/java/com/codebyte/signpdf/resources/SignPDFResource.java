@@ -76,15 +76,15 @@ public class SignPDFResource {
 
             String pdfID = RandomStringUtils.random(13, true, true).toUpperCase();
 
-            BufferedImage image = new BufferedImage(250, 70, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage image = new BufferedImage(250, 60, BufferedImage.TYPE_INT_ARGB);
             Graphics g = image.getGraphics();
             g.drawImage(ImageIO.read(SignPDFResource.class.getResource("/cob.jpg")), 0, 0, null);
             g.setFont(g.getFont().deriveFont(10f));
             g.setColor(Color.BLACK);
-            g.drawString("Certified Firmapdf.net", 55, 10);
-            g.drawString("Signer " + newSignRequest.getCaller(), 55, 20);
-            g.drawString("Date " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("y-M-d H:m:s")), 55, 30);
-            g.drawString("PDFId " + pdfID, 55, 40);
+            g.drawString("Certified Firmapdf.net", 50, 10);
+            g.drawString("Signer " + newSignRequest.getCaller(), 50, 20);
+            g.drawString("Date " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("y-M-d H:m:s")), 50, 30);
+            g.drawString("PDFId " + pdfID, 50, 40);
             g.dispose();
 
             File logoForSign = new File(FileUtils.getTempDirectory(), UUID.randomUUID() + ".png");
@@ -110,7 +110,7 @@ public class SignPDFResource {
                         // better method inspired by http://stackoverflow.com/a/22318681/535646
                         // reduce this value if the image is too large
                         float scale = 1f;
-                        contentStream.drawImage(pdImage, 0, 770, 250, 70);
+                        contentStream.drawImage(pdImage, 5, 780, 250, 60);
                     }
                 }
 
