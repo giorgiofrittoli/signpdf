@@ -1,4 +1,4 @@
-package com.codebyte.signpdf;
+package com.codebyte.signpdf.producers;
 
 import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -35,8 +35,7 @@ public class PrivateKeyProducer {
     void init() throws IOException, NoSuchAlgorithmException, CertificateException, InvalidKeySpecException {
 
         // Aggiungi provider BouncyCastle
-        BouncyCastleProvider provider = new BouncyCastleProvider();
-        Security.addProvider(provider);
+        Security.addProvider(new BouncyCastleProvider());
 
         CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
         try (InputStream certIS = new FileInputStream(certFilepath)) {

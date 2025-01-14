@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class TimestampSignatureImpl implements SignatureInterface {
-    private TSAClient tsaClient;
+    private final TSAClient tsaClient;
 
     public TimestampSignatureImpl(TSAClient tsaClient) {
         super();

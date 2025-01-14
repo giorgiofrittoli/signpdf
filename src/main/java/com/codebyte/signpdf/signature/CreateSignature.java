@@ -31,17 +31,6 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.util.Calendar;
 
-/**
- * An example for signing a PDF with bouncy castle.
- * A keystore can be created with the java keytool, for example:
- * <p>
- * {@code keytool -genkeypair -storepass 123456 -storetype pkcs12 -alias test -validity 365
- * -v -keyalg RSA -keystore keystore.p12 }
- *
- * @author Thomas Chojecki
- * @author Vakhtang Koroghlishvili
- * @author John Hewson
- */
 public class CreateSignature extends CreateSignatureBase {
 
 
@@ -49,26 +38,42 @@ public class CreateSignature extends CreateSignatureBase {
         super(privateKey, certificateChain);
     }
 
-    /**
-     * Signs the given PDF file.
-     *
-     * @param inFile  input PDF file
-     * @param outFile output PDF file
-     * @param tsaUrl  optional TSA url
-     * @throws IOException if the input file could not be read
-     */
-    public void signDetached(File inFile, File outFile, String tsaUrl) throws IOException {
+    public void signDetached(PDDocument document, File outFile, String signedBy, String tsaUrl) throws IOException {
 
-        if (inFile == null || !inFile.exists()) {
-            throw new FileNotFoundException("Document for signing does not exist");
-        }
+        try (FileOutputStream fos = new FileOutputStream(outFile)) {
 
-        setTsaUrl(tsaUrl);
+            setTsaUrl(tsaUrl);
 
-        // sign
-        try (FileOutputStream fos = new FileOutputStream(outFile);
-             PDDocument doc = Loader.loadPDF(inFile)) {
-            signDetached(doc, fos);
+            // call SigUtils.checkCrossReferenceTable(document) if Adobe complains
+            // and read https://stackoverflow.com/a/71293901/535646
+            // and https://issues.apache.org/jira/browse/PDFBOX-5382
+
+            int accessPermissions = SigUtils.getMDPPermission(document);
+            if (accessPermissions == 1) {
+                throw new IllegalStateException("No changes to the document are permitted due to DocMDP transform parameters dictionary");
+            }
+
+            // create signature dictionary
+            PDSignature signature = new PDSignature();
+            signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
+            signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
+            signature.setName(signedBy);
+            // the signing date, needed for valid signature
+            signature.setSignDate(Calendar.getInstance());
+
+            // Optional: certify
+            if (accessPermissions == 0) {
+                SigUtils.setMDPPermission(document, signature, 2);
+            }
+
+            SignatureOptions signatureOptions = new SignatureOptions();
+            // Size can vary, but should be enough for purpose.
+            signatureOptions.setPreferredSignatureSize(SignatureOptions.DEFAULT_SIGNATURE_SIZE * 2);
+            // register signature dictionary and sign interface
+            document.addSignature(signature, this, signatureOptions);
+            // write incremental (only for signing purpose)
+            document.saveIncremental(fos);
+
         }
     }
 
@@ -104,53 +109,6 @@ public class CreateSignature extends CreateSignatureBase {
 
             doc.addSignature(signature, new TimestampSignatureImpl(tsaClient));
             doc.saveIncremental(fos);
-        }
-    }
-
-    public void signDetached(PDDocument document, OutputStream output)
-            throws IOException {
-
-        // call SigUtils.checkCrossReferenceTable(document) if Adobe complains
-        // and read https://stackoverflow.com/a/71293901/535646
-        // and https://issues.apache.org/jira/browse/PDFBOX-5382
-
-        int accessPermissions = SigUtils.getMDPPermission(document);
-        if (accessPermissions == 1) {
-            throw new IllegalStateException("No changes to the document are permitted due to DocMDP transform parameters dictionary");
-        }
-
-        // create signature dictionary
-        PDSignature signature = new PDSignature();
-        signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
-        signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
-        signature.setName("IN LAB Srl");
-        signature.setReason("Firma PDF");
-
-        // the signing date, needed for valid signature
-        signature.setSignDate(Calendar.getInstance());
-
-        // Optional: certify 
-        if (accessPermissions == 0) {
-            SigUtils.setMDPPermission(document, signature, 2);
-        }
-
-        if (isExternalSigning()) {
-            document.addSignature(signature);
-            ExternalSigningSupport externalSigning =
-                    document.saveIncrementalForExternalSigning(output);
-            // invoke external signature service
-            byte[] cmsSignature = sign(externalSigning.getContent());
-            // set signature bytes received from the service
-            externalSigning.setSignature(cmsSignature);
-        } else {
-            SignatureOptions signatureOptions = new SignatureOptions();
-            // Size can vary, but should be enough for purpose.
-            signatureOptions.setPreferredSignatureSize(SignatureOptions.DEFAULT_SIGNATURE_SIZE * 2);
-            // register signature dictionary and sign interface
-            document.addSignature(signature, this, signatureOptions);
-
-            // write incremental (only for signing purpose)
-            document.saveIncremental(output);
         }
     }
 }

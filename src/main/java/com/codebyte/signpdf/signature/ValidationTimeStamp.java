@@ -29,7 +29,6 @@ import org.bouncycastle.tsp.TimeStampToken;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -63,19 +62,6 @@ public class ValidationTimeStamp
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             this.tsaClient = new TSAClient(new URI(tsaUrl).toURL(), null, null, digest);
         }
-    }
-
-    /**
-     * Creates a signed timestamp token by the given input stream.
-     * 
-     * @param content InputStream of the content to sign
-     * @return the byte[] of the timestamp token
-     * @throws IOException
-     */
-    public byte[] getTimeStampToken(InputStream content) throws IOException
-    {
-        TimeStampToken timeStampToken = tsaClient.getTimeStampToken(content);
-        return timeStampToken.getEncoded();
     }
 
     /**

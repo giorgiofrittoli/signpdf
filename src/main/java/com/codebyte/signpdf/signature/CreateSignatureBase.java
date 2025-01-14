@@ -45,19 +45,6 @@ public abstract class CreateSignatureBase implements SignatureInterface {
     private PrivateKey privateKey;
     private Certificate[] certificateChain;
     private String tsaUrl;
-    /**
-     * -- SETTER --
-     * Set if external signing scenario should be used.
-     * If
-     * , SignatureInterface would be used for signing.
-     * <p>
-     * Default:
-     * </p>
-     *
-     * @param externalSigning {@code true} if external signing should be performed
-     */
-    private boolean externalSigning;
-
 
     public CreateSignatureBase(PrivateKey privateKey, Certificate[] certificateChain) {
         this.privateKey = privateKey;
@@ -81,7 +68,6 @@ public abstract class CreateSignatureBase implements SignatureInterface {
      */
     @Override
     public byte[] sign(InputStream content) throws IOException {
-        // cannot be done private (interface)
         try {
             CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
             X509Certificate cert = (X509Certificate) certificateChain[0];
