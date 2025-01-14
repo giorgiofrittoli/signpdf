@@ -76,7 +76,7 @@ public class SignPDFResource {
             String pdfID = RandomStringUtils.random(13, true, true).toUpperCase();
 
             // creazione logo firma con informazioni pdf e firmatario
-            BufferedImage image = new BufferedImage(250, 60, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage image = new BufferedImage(260, 60, BufferedImage.TYPE_INT_ARGB);
             Graphics g = image.getGraphics();
             g.drawImage(ImageIO.read(SignPDFResource.class.getResource("/base_logo.jpg")), 0, 0, null);
             g.setFont(font);
